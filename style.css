@@ -364,6 +364,8 @@ input:focus-visible,
   text-overflow: ellipsis;
 }
 
+.chip.yearly { background: var(--peach); }
+
 .chip-more {
   font-weight: bold;
   padding-left: 3px;
@@ -391,8 +393,38 @@ input:focus-visible,
   align-content: start;
 }
 
+.repeat-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 6px 10px;
+  font-weight: bold;
+  background: #fff4ec;
+  border: 3px solid var(--ink);
+  border-radius: 8px 3px 9px 4px / 4px 9px 3px 8px;
+  cursor: pointer;
+}
+
+.repeat-toggle input {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.repeat-toggle:has(input:checked) { background: var(--peach); }
+
+.repeat-toggle:has(input:focus-visible) {
+  outline: 4px dashed var(--accent);
+  outline-offset: 3px;
+}
+
 .cal-form .sub-caption,
 .cal-form .field-wide,
+.cal-form .repeat-toggle,
 .cal-form .btn-row,
 .cal-form .hint { grid-column: 1 / -1; }
 
@@ -441,7 +473,18 @@ input:focus-visible,
 
 .cal-day-list .ev-title { flex: 1; }
 
+.cal-day-list li.yearly { background: var(--peach); }
+
 .cal-day-list li.editing { background: var(--sun); }
+
+.yearly-badge {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  padding: 1px 6px;
+  background: var(--white);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+}
 
 .edit-btn { flex: 0 0 auto; font-size: 1.15rem; }
 
@@ -857,6 +900,7 @@ input:focus-visible,
     border-radius: 50%;
     background: var(--accent);
   }
+  .chip.yearly { background: #ffb26b; }
   .chip-more { font-size: 0.7rem; }
 
   .cal-day { flex-direction: column; flex-wrap: nowrap; }

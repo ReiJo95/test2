@@ -15,7 +15,10 @@ Termine, Notizen, Aufgaben, den Essensplan für die Woche und die Einkaufsliste.
 - Ansicht: **Monatsansicht** (Raster mit einem Kästchen pro Tag), Monate vor- und zurückblättern.
 - Ereignis eintragen: Datum, Titel, Uhrzeit (freiwillig).
 - Klick auf einen Tag zeigt alle Termine dieses Tages.
-- Ereignis **bearbeiten** (✎): Titel, Datum und Uhrzeit ändern, zum Beispiel bei einem Tippfehler.
+- Ereignis **bearbeiten** (✎): Titel, Datum, Uhrzeit und „jedes Jahr“ ändern, zum Beispiel bei einem Tippfehler.
+- **Jährlich wiederholen** (Kästchen 🔁, z. B. für Geburtstage): Der Termin erscheint jedes Jahr am selben Tag,
+  ab dem eingetragenen Jahr. Ein Termin am 29. Februar erscheint in Jahren ohne Schalttag am 28. Februar.
+  Jährliche Termine haben eine eigene Farbe und das Zeichen 🔁.
 - Ereignisse werden **nicht** gelöscht und **nicht** abgehakt. Der Kalender läuft fortlaufend weiter.
 
 ### 3.2 Notizen („Daran müssen wir denken“)
@@ -70,6 +73,7 @@ Termine, Notizen, Aufgaben, den Essensplan für die Woche und die Einkaufsliste.
 ## 7. Abnahmekriterien
 - [ ] Ich kann ein Kalender-Ereignis eintragen. Es erscheint im Monatsraster und kann nicht gelöscht werden.
 - [ ] Ich kann ein Kalender-Ereignis ändern (Titel, Datum, Uhrzeit).
+- [ ] Ich kann einen Geburtstag als „jedes Jahr wiederholen“ eintragen. Er erscheint in jedem folgenden Jahr am selben Tag.
 - [ ] Ich kann im Kalender Monate vor- und zurückblättern.
 - [ ] Ich kann eine Notiz eintragen. Nach dem Abhaken ist sie weg, und „Rückgängig“ holt sie zurück.
 - [ ] Ich kann eine Aufgabe eintragen und Mama, Papa oder Beiden zuweisen. Nach dem Abhaken ist sie weg.

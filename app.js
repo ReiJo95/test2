@@ -39,7 +39,13 @@ function normalizeData(raw) {
 
   out.events = list(raw.events)
     .filter((e) => DATE_RE.test(e.date) && text(e.title, 200))
-    .map((e) => ({ id: id(e.id), date: e.date, time: TIME_RE.test(e.time) ? e.time : '', title: text(e.title, 200) }));
+    .map((e) => ({
+      id: id(e.id),
+      date: e.date,
+      time: TIME_RE.test(e.time) ? e.time : '',
+      title: text(e.title, 200),
+      yearly: e.yearly === true,
+    }));
 
   out.notes = list(raw.notes)
     .filter((n) => text(n.text, 300))
@@ -211,24 +217,46 @@ function drawBurst() {
 
 /* ---------- Kalender ---------- */
 
-function eventsByDate() {
-  const map = new Map();
-  for (const ev of data.events) {
-    if (!map.has(ev.date)) map.set(ev.date, []);
-    map.get(ev.date).push(ev);
-  }
-  // Ganztägige Termine zuerst, dann nach Uhrzeit
-  for (const list of map.values()) {
-    list.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-  }
-  return map;
+function isLeapYear(year) {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+/**
+ * Tag, an dem ein jährlicher Termin im Jahr `year` stattfindet.
+ * Der 29. Februar wird in Jahren ohne Schalttag auf den 28. Februar gelegt.
+ */
+function occurrenceInYear(ev, year) {
+  const orig = fromKey(ev.date);
+  let day = orig.getDate();
+  if (orig.getMonth() === 1 && day === 29 && !isLeapYear(year)) day = 28;
+  return new Date(year, orig.getMonth(), day);
+}
+
+/** Findet der Termin an diesem Tag statt? */
+function occursOn(ev, day) {
+  if (!ev.yearly) return ev.date === toKey(day);
+  if (day.getFullYear() < fromKey(ev.date).getFullYear()) return false;
+  return toKey(occurrenceInYear(ev, day.getFullYear())) === toKey(day);
+}
+
+/** Alle Termine eines Tages – ganztägige zuerst, dann nach Uhrzeit */
+function eventsOn(day) {
+  return data.events
+    .filter((ev) => occursOn(ev, day))
+    .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+}
+
+/** Tag, den der Kalender nach dem Speichern zeigen soll */
+function displayKeyFor(ev) {
+  if (!ev.yearly) return ev.date;
+  const year = Math.max(calState.year, fromKey(ev.date).getFullYear());
+  return toKey(occurrenceInYear(ev, year));
 }
 
 function renderCalendar() {
   const { year, month } = calState;
   $('cal-title').textContent = `${MONTHS[month]} ${year}`;
 
-  const byDate = eventsByDate();
   const first = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const offset = weekdayIndex(first);
@@ -241,7 +269,7 @@ function renderCalendar() {
   for (let i = 0; i < cellCount; i++) {
     const day = addDays(start, i);
     const key = toKey(day);
-    const events = byDate.get(key) || [];
+    const events = eventsOn(day);
 
     const classes = ['cal-day'];
     if (day.getMonth() !== month) classes.push('other-month');
@@ -260,10 +288,11 @@ function renderCalendar() {
     }, el('span', { class: 'day-num', text: String(day.getDate()) }));
 
     events.slice(0, MAX_CHIPS).forEach((ev) => {
+      const label = (ev.yearly ? '🔁 ' : '') + (ev.time ? ev.time + ' ' : '') + ev.title;
       cell.append(el('span', {
-        class: 'chip',
-        title: (ev.time ? ev.time + ' ' : '') + ev.title,
-        text: (ev.time ? ev.time + ' ' : '') + ev.title,
+        class: ev.yearly ? 'chip yearly' : 'chip',
+        title: label,
+        text: label,
       }));
     });
     if (events.length > MAX_CHIPS) {
@@ -273,10 +302,10 @@ function renderCalendar() {
     grid.append(cell);
   }
 
-  renderDayList(byDate);
+  renderDayList();
 }
 
-function renderDayList(byDate = eventsByDate()) {
+function renderDayList() {
   const day = fromKey(calState.selected);
   $('cal-day-title').textContent = calState.selected === todayKey
     ? `Heute, ${day.getDate()}. ${MONTHS[day.getMonth()]}`
@@ -284,16 +313,18 @@ function renderDayList(byDate = eventsByDate()) {
 
   const list = $('cal-day-list');
   list.replaceChildren();
-  const events = byDate.get(calState.selected) || [];
+  const events = eventsOn(day);
 
   if (events.length === 0) {
     list.append(el('li', { class: 'empty', text: 'Keine Termine an diesem Tag.' }));
     return;
   }
   for (const ev of events) {
-    list.append(el('li', { class: ev.id === editId ? 'editing' : '' },
+    const classes = [ev.yearly ? 'yearly' : '', ev.id === editId ? 'editing' : ''].join(' ').trim();
+    list.append(el('li', { class: classes },
       el('span', { class: 'time', text: ev.time || 'ganztags' }),
       el('span', { class: 'ev-title', text: ev.title }),
+      ev.yearly ? el('span', { class: 'yearly-badge', text: '🔁 jedes Jahr' }) : null,
       el('button', {
         type: 'button',
         class: 'btn btn-small btn-light edit-btn',
@@ -312,6 +343,7 @@ function startEdit(ev) {
   $('cal-date').value = ev.date;
   $('cal-time').value = ev.time;
   $('cal-text').value = ev.title;
+  $('cal-yearly').checked = Boolean(ev.yearly);
   $('cal-form-title').textContent = 'Termin ändern';
   $('cal-submit').textContent = 'Speichern!';
   $('cal-cancel').hidden = false;
@@ -326,6 +358,7 @@ function stopEdit() {
   editId = null;
   $('cal-text').value = '';
   $('cal-time').value = '';
+  $('cal-yearly').checked = false;
   $('cal-form-title').textContent = 'Neuer Termin';
   $('cal-submit').textContent = 'Eintragen!';
   $('cal-cancel').hidden = true;
@@ -361,16 +394,19 @@ $('cal-form').addEventListener('submit', (e) => {
   const title = $('cal-text').value.trim();
   if (!date || !title) return;
   const time = $('cal-time').value;
+  const yearly = $('cal-yearly').checked;
   const existing = editId && data.events.find((ev) => ev.id === editId);
+  let saved;
   if (existing) {
-    Object.assign(existing, { date, time, title });
+    saved = Object.assign(existing, { date, time, title, yearly });
   } else {
-    data.events.push({ id: newId(), date, time, title });
+    saved = { id: newId(), date, time, title, yearly };
+    data.events.push(saved);
   }
   saveData();
   stopEdit();
-  selectDay(date);
-  showToast(existing ? 'Termin geändert!' : 'Termin eingetragen!');
+  selectDay(displayKeyFor(saved));
+  showToast(existing ? 'Termin geändert!' : yearly ? 'Termin eingetragen – kommt jedes Jahr wieder!' : 'Termin eingetragen!');
 });
 
 $('cal-cancel').addEventListener('click', () => {
