@@ -3,9 +3,134 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hallo</title>
+  <title>Familien-Zentrale</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Hallo</h1>
+  <header class="masthead">
+    <div class="burst" aria-hidden="true"></div>
+    <div class="masthead-text">
+      <h1 class="title">Familien-Zentrale!</h1>
+      <p class="bubble today-bubble" id="today-text">Heute ist …</p>
+    </div>
+  </header>
+
+  <main class="board">
+
+    <!-- KALENDER -->
+    <section class="panel panel-calendar" aria-labelledby="h-calendar">
+      <h2 class="caption" id="h-calendar">Kalender</h2>
+
+      <div class="cal-nav">
+        <button type="button" class="btn btn-small" id="cal-prev" aria-label="Voriger Monat">◀</button>
+        <h3 class="cal-title" id="cal-title">Monat</h3>
+        <button type="button" class="btn btn-small" id="cal-next" aria-label="Nächster Monat">▶</button>
+        <button type="button" class="btn btn-small btn-light" id="cal-today">Heute</button>
+      </div>
+
+      <div class="cal-weekdays" aria-hidden="true">
+        <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+
+      <div class="cal-bottom">
+        <div class="cal-day-box">
+          <h3 class="sub-caption" id="cal-day-title">Termine</h3>
+          <ul class="cal-day-list" id="cal-day-list"></ul>
+        </div>
+
+        <form class="entry-form cal-form" id="cal-form" autocomplete="off">
+          <h3 class="sub-caption">Neuer Termin</h3>
+          <label class="field">
+            <span>Datum</span>
+            <input type="date" id="cal-date" required>
+          </label>
+          <label class="field">
+            <span>Uhrzeit (freiwillig)</span>
+            <input type="time" id="cal-time">
+          </label>
+          <label class="field field-wide">
+            <span>Was ist los?</span>
+            <input type="text" id="cal-text" maxlength="80" placeholder="z. B. Zahnarzt, Elternabend …" required>
+          </label>
+          <button type="submit" class="btn">Eintragen!</button>
+          <p class="hint">Termine bleiben für immer im Kalender stehen.</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- NOTIZEN -->
+    <section class="panel panel-notes" aria-labelledby="h-notes">
+      <h2 class="caption" id="h-notes">Daran müssen wir denken!</h2>
+      <form class="entry-form inline-form" id="note-form" autocomplete="off">
+        <input type="text" id="note-text" maxlength="120" placeholder="Neue Notiz …" aria-label="Neue Notiz" required>
+        <button type="submit" class="btn">+</button>
+      </form>
+      <ul class="note-list" id="note-list"></ul>
+    </section>
+
+    <!-- EINKAUFSLISTE -->
+    <section class="panel panel-shopping" aria-labelledby="h-shopping">
+      <h2 class="caption" id="h-shopping">Einkaufsliste</h2>
+      <form class="entry-form inline-form" id="shop-form" autocomplete="off">
+        <input type="text" id="shop-text" maxlength="60" placeholder="z. B. Milch, Brot …" aria-label="Neuer Artikel" required>
+        <button type="submit" class="btn">+</button>
+      </form>
+      <ul class="shop-list" id="shop-list"></ul>
+      <p class="hint">Abgehakte Artikel verschwinden nach 7 Tagen von selbst.</p>
+    </section>
+
+    <!-- AUFGABEN -->
+    <section class="panel panel-tasks" aria-labelledby="h-tasks">
+      <h2 class="caption" id="h-tasks">Aufgaben</h2>
+      <form class="entry-form task-form" id="task-form" autocomplete="off">
+        <input type="text" id="task-text" maxlength="100" placeholder="Neue Aufgabe …" aria-label="Neue Aufgabe" required>
+        <fieldset class="who-picker">
+          <legend>Wer macht's?</legend>
+          <label class="who who-mama"><input type="radio" name="who" value="mama" checked><span>Mama</span></label>
+          <label class="who who-papa"><input type="radio" name="who" value="papa"><span>Papa</span></label>
+          <label class="who who-beide"><input type="radio" name="who" value="beide"><span>Beide</span></label>
+        </fieldset>
+        <button type="submit" class="btn">Eintragen!</button>
+      </form>
+      <div class="task-columns">
+        <div class="task-col col-mama">
+          <h3 class="sub-caption">Mama</h3>
+          <ul class="task-list" id="task-list-mama"></ul>
+        </div>
+        <div class="task-col col-papa">
+          <h3 class="sub-caption">Papa</h3>
+          <ul class="task-list" id="task-list-papa"></ul>
+        </div>
+        <div class="task-col col-beide">
+          <h3 class="sub-caption">Beide</h3>
+          <ul class="task-list" id="task-list-beide"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- WOCHENPLAN -->
+    <section class="panel panel-meals" aria-labelledby="h-meals">
+      <h2 class="caption" id="h-meals">Was kochen wir?</h2>
+      <div class="week-nav">
+        <button type="button" class="btn btn-small" id="week-prev" aria-label="Vorige Woche">◀</button>
+        <h3 class="week-title" id="week-title">Woche</h3>
+        <button type="button" class="btn btn-small" id="week-next" aria-label="Nächste Woche">▶</button>
+      </div>
+      <ul class="meal-list" id="meal-list"></ul>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    Alle Einträge werden nur in diesem Browser auf diesem Gerät gespeichert.
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden>
+    <span id="toast-text"></span>
+    <button type="button" class="btn btn-small" id="toast-undo">Rückgängig</button>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
