@@ -23,18 +23,49 @@ function emptyData() {
   return { events: [], notes: [], tasks: [], meals: {}, shopping: [] };
 }
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE = /^\d{2}:\d{2}$/;
+
+/**
+ * Prüft gespeicherte oder geladene Daten und behält nur gültige Einträge.
+ * So kann eine kaputte Datei das Dashboard nicht durcheinanderbringen.
+ */
+function normalizeData(raw) {
+  const out = emptyData();
+  if (!raw || typeof raw !== 'object') return out;
+  const text = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+  const id = (v) => text(v, 40) || newId();
+  const list = (v) => (Array.isArray(v) ? v.filter((x) => x && typeof x === 'object') : []);
+
+  out.events = list(raw.events)
+    .filter((e) => DATE_RE.test(e.date) && text(e.title, 200))
+    .map((e) => ({ id: id(e.id), date: e.date, time: TIME_RE.test(e.time) ? e.time : '', title: text(e.title, 200) }));
+
+  out.notes = list(raw.notes)
+    .filter((n) => text(n.text, 300))
+    .map((n) => ({ id: id(n.id), text: text(n.text, 300) }));
+
+  out.tasks = list(raw.tasks)
+    .filter((t) => text(t.text, 300) && PEOPLE.includes(t.who))
+    .map((t) => ({ id: id(t.id), text: text(t.text, 300), who: t.who }));
+
+  out.shopping = list(raw.shopping)
+    .filter((s) => text(s.text, 200))
+    .map((s) => ({ id: id(s.id), text: text(s.text, 200), checkedAt: Number.isFinite(s.checkedAt) ? s.checkedAt : null }));
+
+  if (raw.meals && typeof raw.meals === 'object' && !Array.isArray(raw.meals)) {
+    for (const [key, value] of Object.entries(raw.meals)) {
+      if (DATE_RE.test(key) && text(value, 200)) out.meals[key] = text(value, 200);
+    }
+  }
+  return out;
+}
+
 function loadData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptyData();
-    const parsed = JSON.parse(raw);
-    const data = Object.assign(emptyData(), parsed);
-    // Falls etwas kaputt gespeichert wurde, mit leeren Werten weitermachen
-    for (const key of ['events', 'notes', 'tasks', 'shopping']) {
-      if (!Array.isArray(data[key])) data[key] = [];
-    }
-    if (typeof data.meals !== 'object' || data.meals === null || Array.isArray(data.meals)) data.meals = {};
-    return data;
+    return normalizeData(JSON.parse(raw));
   } catch (e) {
     return emptyData();
   }
@@ -125,6 +156,12 @@ const calState = {
 };
 
 let weekOffset = 0;
+
+/** ID des Termins, der gerade geändert wird (oder null) */
+let editId = null;
+
+/** Datum des Tages im Wochenplan, bei dem das Zutaten-Feld offen ist (oder null) */
+let ingredientsKey = null;
 
 /* ---------- Hinweis-Blase mit "Rückgängig" ---------- */
 
@@ -254,11 +291,45 @@ function renderDayList(byDate = eventsByDate()) {
     return;
   }
   for (const ev of events) {
-    list.append(el('li', {},
+    list.append(el('li', { class: ev.id === editId ? 'editing' : '' },
       el('span', { class: 'time', text: ev.time || 'ganztags' }),
-      el('span', { text: ev.title }),
+      el('span', { class: 'ev-title', text: ev.title }),
+      el('button', {
+        type: 'button',
+        class: 'btn btn-small btn-light edit-btn',
+        'aria-label': `Termin ändern: ${ev.title}`,
+        title: 'Termin ändern',
+        text: '✎',
+        onclick: () => startEdit(ev),
+      }),
     ));
   }
+}
+
+/** Termin zum Ändern ins Formular laden */
+function startEdit(ev) {
+  editId = ev.id;
+  $('cal-date').value = ev.date;
+  $('cal-time').value = ev.time;
+  $('cal-text').value = ev.title;
+  $('cal-form-title').textContent = 'Termin ändern';
+  $('cal-submit').textContent = 'Speichern!';
+  $('cal-cancel').hidden = false;
+  $('cal-form').classList.add('editing');
+  renderDayList();
+  $('cal-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  $('cal-text').focus({ preventScroll: true });
+}
+
+/** Formular wieder auf "Neuer Termin" stellen */
+function stopEdit() {
+  editId = null;
+  $('cal-text').value = '';
+  $('cal-time').value = '';
+  $('cal-form-title').textContent = 'Neuer Termin';
+  $('cal-submit').textContent = 'Eintragen!';
+  $('cal-cancel').hidden = true;
+  $('cal-form').classList.remove('editing');
 }
 
 function selectDay(key) {
@@ -289,12 +360,23 @@ $('cal-form').addEventListener('submit', (e) => {
   const date = $('cal-date').value;
   const title = $('cal-text').value.trim();
   if (!date || !title) return;
-  data.events.push({ id: newId(), date, time: $('cal-time').value, title });
+  const time = $('cal-time').value;
+  const existing = editId && data.events.find((ev) => ev.id === editId);
+  if (existing) {
+    Object.assign(existing, { date, time, title });
+  } else {
+    data.events.push({ id: newId(), date, time, title });
+  }
   saveData();
-  $('cal-text').value = '';
-  $('cal-time').value = '';
+  stopEdit();
   selectDay(date);
-  showToast('Termin eingetragen!');
+  showToast(existing ? 'Termin geändert!' : 'Termin eingetragen!');
+});
+
+$('cal-cancel').addEventListener('click', () => {
+  stopEdit();
+  $('cal-date').value = calState.selected;
+  renderDayList();
 });
 
 /* ---------- Notizen ---------- */
@@ -414,18 +496,90 @@ function renderMeals() {
       saveData();
     });
 
-    list.append(el('li', { class: key === todayKey ? 'meal today' : 'meal' },
+    const isOpen = ingredientsKey === key;
+    const shopButton = el('button', {
+      type: 'button',
+      class: 'btn btn-small btn-light meal-shop',
+      'aria-label': `Zutaten für ${WEEKDAYS_LONG[i]} auf die Einkaufsliste`,
+      'aria-expanded': isOpen ? 'true' : 'false',
+      title: 'Zutaten auf die Einkaufsliste',
+      text: '🛒',
+      onclick: () => {
+        ingredientsKey = isOpen ? null : key;
+        renderMeals();
+        if (!isOpen) $('ingredient-input').focus();
+      },
+    });
+
+    const row = el('li', { class: key === todayKey ? 'meal today' : 'meal' },
       el('span', { class: 'meal-day' },
         WEEKDAYS_SHORT[i],
         el('small', { text: shortDate(day) }),
       ),
       input,
-    ));
+      shopButton,
+    );
+
+    if (isOpen) row.append(ingredientForm(data.meals[key]));
+    list.append(row);
   }
 }
 
-$('week-prev').addEventListener('click', () => { weekOffset--; renderMeals(); });
-$('week-next').addEventListener('click', () => { weekOffset++; renderMeals(); });
+/** Kleines Formular: Zutaten mit Komma getrennt eingeben */
+function ingredientForm(mealName) {
+  const input = el('input', {
+    type: 'text',
+    id: 'ingredient-input',
+    maxlength: '300',
+    'aria-label': 'Zutaten, mit Komma getrennt',
+    placeholder: mealName ? `Zutaten für ${mealName}, z. B. Nudeln, Tomaten` : 'z. B. Nudeln, Tomaten, Käse',
+  });
+  return el('form', {
+    class: 'ingredient-form',
+    autocomplete: 'off',
+    onsubmit: (e) => {
+      e.preventDefault();
+      addIngredients(input.value);
+    },
+  },
+    input,
+    el('button', { type: 'submit', class: 'btn btn-small', text: 'Auf die Liste!' }),
+    el('button', {
+      type: 'button',
+      class: 'btn btn-small btn-light',
+      text: 'Abbrechen',
+      onclick: () => { ingredientsKey = null; renderMeals(); },
+    }),
+  );
+}
+
+/** Zutaten einzeln auf die Einkaufsliste setzen (ohne doppelte offene Einträge) */
+function addIngredients(textValue) {
+  const items = textValue.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean);
+  if (items.length === 0) return;
+
+  const openNames = new Set(data.shopping.filter((s) => !s.checkedAt).map((s) => s.text.toLowerCase()));
+  let added = 0;
+  let skipped = 0;
+  for (const item of items) {
+    const name = item.slice(0, 60);
+    if (openNames.has(name.toLowerCase())) { skipped++; continue; }
+    openNames.add(name.toLowerCase());
+    data.shopping.push({ id: newId(), text: name, checkedAt: null });
+    added++;
+  }
+  saveData();
+  ingredientsKey = null;
+  renderMeals();
+  renderShopping();
+
+  let message = added === 1 ? '1 Zutat auf der Einkaufsliste!' : `${added} Zutaten auf der Einkaufsliste!`;
+  if (skipped > 0) message += ` (${skipped} stand schon drauf)`;
+  showToast(message);
+}
+
+$('week-prev').addEventListener('click', () => { weekOffset--; ingredientsKey = null; renderMeals(); });
+$('week-next').addEventListener('click', () => { weekOffset++; ingredientsKey = null; renderMeals(); });
 
 /* ---------- Einkaufsliste ---------- */
 
@@ -481,6 +635,58 @@ $('shop-form').addEventListener('submit', (e) => {
   saveData();
   $('shop-text').value = '';
   renderShopping();
+});
+
+/* ---------- Sicherung ---------- */
+
+const BACKUP_APP = 'familien-zentrale';
+
+$('backup-save').addEventListener('click', () => {
+  const payload = { app: BACKUP_APP, version: 1, savedAt: new Date().toISOString(), data };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = el('a', { href: url, download: `familien-zentrale-sicherung-${todayKey}.json` });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('Sicherung gespeichert! Sie liegt in deinem Download-Ordner.');
+});
+
+$('backup-load').addEventListener('click', () => $('backup-file').click());
+
+$('backup-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';  // damit man dieselbe Datei nochmal wählen kann
+  if (!file) return;
+
+  let imported;
+  let savedAt = null;
+  try {
+    const parsed = JSON.parse(await file.text());
+    if (!parsed || parsed.app !== BACKUP_APP || typeof parsed.data !== 'object') throw new Error('falsches Format');
+    imported = normalizeData(parsed.data);
+    savedAt = new Date(parsed.savedAt);
+  } catch (err) {
+    showToast('Diese Datei ist keine Sicherung vom Familien-Dashboard.');
+    return;
+  }
+
+  const when = savedAt && !isNaN(savedAt) ? ` vom ${shortDate(savedAt)}${savedAt.getFullYear()}` : '';
+  const ok = confirm(`Sicherung${when} laden?\n\nAchtung: Alle Einträge, die jetzt im Dashboard stehen, werden dabei ersetzt.`);
+  if (!ok) return;
+
+  const previous = data;
+  data = imported;
+  saveData();
+  stopEdit();
+  ingredientsKey = null;
+  renderAll();
+  showToast('Sicherung geladen!', () => {
+    data = previous;
+    saveData();
+    renderAll();
+  });
 });
 
 /* ---------- Start ---------- */

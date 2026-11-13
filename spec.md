@@ -5,9 +5,9 @@ Ein Dashboard für die Familie. Es zeigt alles Wichtige für den Alltag auf eine
 Termine, Notizen, Aufgaben, den Essensplan für die Woche und die Einkaufsliste.
 
 ## 2. Nutzer
-- Mama und Papa.
+- Mama und Papa. Kinder bekommen keine eigenen Aufgaben.
 - Die Bedienung soll einfach sein und ohne Anleitung funktionieren.
-- Alle benutzen **ein gemeinsames Gerät** (zum Beispiel ein Tablet in der Küche).
+- Alle benutzen **ein gemeinsames Gerät**. Das kann ein PC, Tablet oder Handy sein (gemischt).
 
 ## 3. Funktionen
 
@@ -15,6 +15,7 @@ Termine, Notizen, Aufgaben, den Essensplan für die Woche und die Einkaufsliste.
 - Ansicht: **Monatsansicht** (Raster mit einem Kästchen pro Tag), Monate vor- und zurückblättern.
 - Ereignis eintragen: Datum, Titel, Uhrzeit (freiwillig).
 - Klick auf einen Tag zeigt alle Termine dieses Tages.
+- Ereignis **bearbeiten** (✎): Titel, Datum und Uhrzeit ändern, zum Beispiel bei einem Tippfehler.
 - Ereignisse werden **nicht** gelöscht und **nicht** abgehakt. Der Kalender läuft fortlaufend weiter.
 
 ### 3.2 Notizen („Daran müssen wir denken“)
@@ -29,17 +30,27 @@ Termine, Notizen, Aufgaben, den Essensplan für die Woche und die Einkaufsliste.
 ### 3.4 Wochenplan („Was kochen wir diese Woche?“)
 - Für jeden Tag von Montag bis Sonntag ein Gericht eintragen (eine Mahlzeit pro Tag).
 - Man kann zur nächsten und vorigen Woche blättern.
+- Knopf 🛒 pro Tag: Zutaten mit Komma getrennt eingeben. Jede Zutat kommt einzeln auf die Einkaufsliste.
+  Steht eine Zutat schon (nicht abgehakt) auf der Liste, wird sie nicht doppelt eingetragen.
 
 ### 3.5 Einkaufsliste
 - Artikel eintragen.
 - Artikel abhaken: Er wird **durchgestrichen**, nicht gelöscht. Ein zweiter Klick nimmt den Haken wieder weg.
 - Abgehakte Artikel werden **7 Tage nach dem Abhaken** automatisch gelöscht.
 
+### 3.6 Sicherung
+- Knopf „Sicherung speichern“: Lädt alle Einträge als Datei herunter (`familien-zentrale-sicherung-DATUM.json`).
+- Knopf „Sicherung laden“: Liest so eine Datei wieder ein. Vorher kommt eine Warnung,
+  weil alle aktuellen Einträge ersetzt werden. Danach gibt es kurz „Rückgängig“.
+- Ungültige oder kaputte Einträge in der Datei werden aussortiert.
+- Damit kann man die Einträge auch auf ein anderes Gerät bringen.
+
 ## 4. Daten
 - Gespeichert wird im Browser des Geräts (localStorage). Es gibt keinen Server.
 - Gespeichert werden: Kalender-Ereignisse, Notizen, Aufgaben, Wochenplan und Einkaufsliste.
 - Bei abgehakten Artikeln der Einkaufsliste wird der Zeitpunkt des Abhakens gespeichert (für die 7-Tage-Regel).
-- Grenze: Wer die Browserdaten löscht, löscht auch das Dashboard. Ein anderes Gerät sieht die Daten nicht.
+- Grenze: Wer die Browserdaten löscht, löscht auch das Dashboard, außer es gibt eine Sicherung.
+  Ein anderes Gerät sieht die Daten nur über eine Sicherungsdatei.
 
 ## 5. Oberfläche
 - Stil: Comic-Heft, wie ein amerikanisches Superhelden-Comic.
@@ -48,7 +59,7 @@ Termine, Notizen, Aufgaben, den Essensplan für die Woche und die Einkaufsliste.
   - keine Original-Figuren, Logos oder Namen von Marvel, weil diese urheberrechtlich geschützt sind; nur der Zeichenstil
 - Jeder Bereich ist ein eigenes Comic-Panel.
 - Benutzerfreundlich: große Knöpfe, klare Beschriftung, Eintragen mit wenigen Klicks.
-- Passt sich an die Bildschirmgröße an (PC, Tablet, Handy).
+- Passt sich an PC, Tablet und Handy an (gemischte Nutzung).
 
 ## 6. Technik und Grenzen
 - Nur HTML, CSS und JavaScript.
@@ -58,11 +69,15 @@ Termine, Notizen, Aufgaben, den Essensplan für die Woche und die Einkaufsliste.
 
 ## 7. Abnahmekriterien
 - [ ] Ich kann ein Kalender-Ereignis eintragen. Es erscheint im Monatsraster und kann nicht gelöscht werden.
+- [ ] Ich kann ein Kalender-Ereignis ändern (Titel, Datum, Uhrzeit).
 - [ ] Ich kann im Kalender Monate vor- und zurückblättern.
 - [ ] Ich kann eine Notiz eintragen. Nach dem Abhaken ist sie weg, und „Rückgängig“ holt sie zurück.
 - [ ] Ich kann eine Aufgabe eintragen und Mama, Papa oder Beiden zuweisen. Nach dem Abhaken ist sie weg.
 - [ ] Ich kann für jeden Tag der Woche ein Gericht eintragen.
+- [ ] Ich kann Zutaten eines Gerichts mit einem Klick auf die Einkaufsliste setzen.
 - [ ] Ich kann einen Artikel auf die Einkaufsliste setzen. Nach dem Abhaken ist er durchgestrichen.
 - [ ] Ein abgehakter Artikel verschwindet erst 7 Tage nach dem Abhaken.
 - [ ] Nach dem Neuladen der Seite sind alle Einträge noch da.
+- [ ] Ich kann eine Sicherung speichern und wieder laden.
+- [ ] Die Seite funktioniert auf PC, Tablet und Handy.
 - [ ] Die Seite sieht aus wie ein Comic-Heft, mit hellen Farben.

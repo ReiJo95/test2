@@ -393,8 +393,21 @@ input:focus-visible,
 
 .cal-form .sub-caption,
 .cal-form .field-wide,
-.cal-form .btn,
+.cal-form .btn-row,
 .cal-form .hint { grid-column: 1 / -1; }
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-row .btn { flex: 1 1 auto; }
+
+.btn[hidden] { display: none; }
+
+/* Termin wird gerade geändert */
+.cal-form.editing { background: #fffbe0; border-style: dashed; }
 
 .cal-form .hint { margin: 0; }
 
@@ -418,11 +431,19 @@ input:focus-visible,
   overflow-wrap: anywhere;
 }
 
+.cal-day-list li { align-items: center; }
+
 .cal-day-list .time {
   flex: 0 0 auto;
   font-family: var(--font-head);
   letter-spacing: 1px;
 }
+
+.cal-day-list .ev-title { flex: 1; }
+
+.cal-day-list li.editing { background: var(--sun); }
+
+.edit-btn { flex: 0 0 auto; font-size: 1.15rem; }
 
 .cal-day-list .empty {
   background: transparent;
@@ -678,10 +699,30 @@ input:focus-visible,
 
 .meal {
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr);
+  grid-template-columns: 64px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
 }
+
+.meal-shop { font-size: 1.15rem; padding: 4px 8px; }
+
+.meal-shop[aria-expanded="true"] { background: var(--sun); }
+
+/* Feld für Zutaten unter einem Tag */
+.ingredient-form {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  background: var(--white);
+  border: 3px dashed var(--ink);
+  border-radius: var(--sketch-2);
+}
+
+.ingredient-form input { flex: 1 1 180px; width: auto; }
+
+.ingredient-form .btn { flex: 0 0 auto; }
 
 .meal-day {
   display: flex;
@@ -715,11 +756,27 @@ input:focus-visible,
 /* ---------- Fußzeile & Hinweis-Blase ---------- */
 
 .footer {
-  padding: 0 16px 30px;
-  text-align: center;
-  font-size: 0.9rem;
-  opacity: 0.7;
+  padding: 0 20px 40px;
 }
+
+.backup {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px 18px;
+  text-align: center;
+  background: var(--white);
+  border: 3px solid var(--ink);
+  border-radius: var(--sketch);
+  box-shadow: var(--shadow-small);
+}
+
+.backup p {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+}
+
+.backup .btn-row { justify-content: center; }
+.backup .btn-row .btn { flex: 0 1 auto; }
 
 .toast {
   position: fixed;
@@ -757,7 +814,8 @@ input:focus-visible,
 @media (max-width: 1100px) {
   .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .panel-calendar { grid-column: span 2; grid-row: auto; }
-  .panel-tasks { grid-column: span 2; }
+  .panel-tasks,
+  .panel-meals { grid-column: span 2; }
 }
 
 /* ---------- Handy ---------- */
@@ -772,7 +830,8 @@ input:focus-visible,
   }
 
   .panel-calendar,
-  .panel-tasks { grid-column: auto; }
+  .panel-tasks,
+  .panel-meals { grid-column: auto; }
 
   .panel { padding: 40px 12px 14px; transform: none; }
 

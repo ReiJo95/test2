@@ -40,7 +40,7 @@
         </div>
 
         <form class="entry-form cal-form" id="cal-form" autocomplete="off">
-          <h3 class="sub-caption">Neuer Termin</h3>
+          <h3 class="sub-caption" id="cal-form-title">Neuer Termin</h3>
           <label class="field">
             <span>Datum</span>
             <input type="date" id="cal-date" required>
@@ -53,8 +53,11 @@
             <span>Was ist los?</span>
             <input type="text" id="cal-text" maxlength="80" placeholder="z. B. Zahnarzt, Elternabend …" required>
           </label>
-          <button type="submit" class="btn">Eintragen!</button>
-          <p class="hint">Termine bleiben für immer im Kalender stehen.</p>
+          <div class="btn-row">
+            <button type="submit" class="btn" id="cal-submit">Eintragen!</button>
+            <button type="button" class="btn btn-light" id="cal-cancel" hidden>Abbrechen</button>
+          </div>
+          <p class="hint">Termine bleiben für immer im Kalender stehen. Mit ✎ kannst du einen Termin ändern.</p>
         </form>
       </div>
     </section>
@@ -123,7 +126,16 @@
   </main>
 
   <footer class="footer">
-    Alle Einträge werden nur in diesem Browser auf diesem Gerät gespeichert.
+    <div class="backup">
+      <h2 class="sub-caption">Sicherung</h2>
+      <p>Alle Einträge werden nur in diesem Browser auf diesem Gerät gespeichert.
+        Speichere ab und zu eine Sicherung. Mit ihr kannst du die Einträge auch auf ein anderes Gerät bringen.</p>
+      <div class="btn-row">
+        <button type="button" class="btn" id="backup-save">Sicherung speichern</button>
+        <button type="button" class="btn btn-light" id="backup-load">Sicherung laden</button>
+        <input type="file" id="backup-file" accept=".json,application/json" hidden>
+      </div>
+    </div>
   </footer>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden>
